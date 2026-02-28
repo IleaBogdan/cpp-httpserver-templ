@@ -19,13 +19,40 @@ std::string get_random_number(void){
     
     return std::to_string(dis(gen));
 }
-json get_users_from_db(void){
+json check_user_in_db(int id){
     sqlite3_stmt* stmt;  // Local statement variable
     std::string sql = "SELECT * FROM users WHERE ID = @Id;";
     
     sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
     int index = sqlite3_bind_parameter_index(stmt, "@Id");
-    sqlite3_bind_int(stmt, index, 1);
+    sqlite3_bind_int(stmt, index, id);
+
+    json result;  // Create json object to return
+    
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        // Get the actual data from the query
+        int id = sqlite3_column_int(stmt, 0);  // First column (ID)
+        const char* name = (const char*)sqlite3_column_text(stmt, 1);  // Second column (Name)
+        const char* email = (const char*)sqlite3_column_text(stmt, 2);  // Third column (Email)
+        
+        // Put the actual data into the json
+        result = json({
+            {"ID", id},
+            {"Name", name},
+            {"EMAIL", email}
+        });
+    }
+    
+    sqlite3_finalize(stmt);  // Clean up
+    return result;
+}
+json check_user_in_db(std::string name){
+    sqlite3_stmt* stmt;  // Local statement variable
+    std::string sql = "SELECT * FROM users WHERE Name = @Name;";
+    
+    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
+    int index = sqlite3_bind_parameter_index(stmt, "@Name");
+    sqlite3_bind_text(stmt, index, name.c_str(),-1, SQLITE_TRANSIENT);
 
     json result;  // Create json object to return
     
@@ -78,11 +105,9 @@ signed main(){
             res.end();
             return;
         }
-        
         // Read the file contents
         std::stringstream buffer;
         buffer << file.rdbuf();
-        
         // Set headers for file download
         res.add_header("Content-Type", "application/octet-stream");
         res.add_header("Content-Disposition", "attachment; filename=\"database.db\"");
@@ -93,17 +118,43 @@ signed main(){
         res.end();
     });
 
-    CROW_ROUTE(app,"/getUsers").methods("GET"_method)([](crow::request& req, crow::response& res){
-        auto data=get_users_from_db();
+    CROW_ROUTE(app,"/checkUser").methods("GET"_method)([](crow::request& req, crow::response& res){
+        auto paramId=req.url_params.get("id");
+        if(!paramId){
+            res.body="id parameter missing!";
+            res.code=400;
+            res.end();
+        }
+        auto data=check_user_in_db(std::stoi(paramId));
         res.set_header("Content-Type", "application/json");
         res.add_header("Access-Control-Allow-Origin", "*");
         res.body=data.dump(); 
+        res.code=200;
+        res.end();
+    });
+
+    CROW_ROUTE(app,"/checkName").methods("POST"_method)([](crow::request& req, crow::response& res){
+        auto body_json=crow::json::load(req.body);
+        if (!body_json) {
+            res.code = 400;
+            res.body = "Invalid body JSON";
+            res.end();
+            return;
+        }
+        std::string name=body_json["Name"].s();
+        res.set_header("Content-Type", "application/json");
+        res.add_header("Access-Control-Allow-Origin", "*");
+        
+        auto data=check_user_in_db(name);
+        res.body = data.dump();
+        res.code = 200;
         res.end();
     });
     
     CROW_ROUTE(app, "/random").methods("GET"_method)([](crow::request& req, crow::response& res){
         res.add_header("Access-Control-Allow-Origin", "*");
         res.body=get_random_number();
+        res.code=200;
         res.end();
     });
     

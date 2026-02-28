@@ -28,3 +28,4 @@ sudo apt install libmysqlclient-dev
 resurse:
 https://sqlitebrowser.org/
 https://www.tutorialspoint.com/sqlite/sqlite_commands.htm
+https://sqlite.org/c3ref/bind_blob.html
