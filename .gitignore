@@ -1,3 +1,4 @@
 server
 Crow
 static/openapi.yaml
+node_modules

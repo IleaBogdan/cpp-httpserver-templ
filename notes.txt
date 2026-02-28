@@ -23,3 +23,8 @@ sudo apt install libmysqlclient-dev
 
 
 # the Crow framework needs to be installed at system lvl. maybe I will make some ifdefs to allow local level but not today
+
+
+resurse:
+https://sqlitebrowser.org/
+https://www.tutorialspoint.com/sqlite/sqlite_commands.htm
