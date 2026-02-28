@@ -29,3 +29,18 @@ resurse:
 https://sqlitebrowser.org/
 https://www.tutorialspoint.com/sqlite/sqlite_commands.htm
 https://sqlite.org/c3ref/bind_blob.html
+
+
+pt windows:
+ - instaleaza sqlitebrowser (cli-ul nu functioneaza)
+ - instaleaza g++ cu msys2 si dupa ruleaza: mingw-w64-x86_64-asio-1.32.0-1 (in terminalu de msys2)
+ daca nu mere, well goodluck, te prinzi tutorialspoint
+ - instaleaza json.hpp header
+ - instaleaza installeru de crow: https://github.com/CrowCpp/Crow/releases (trebe sa scrollezi putin)
+ - daca ceva nu mere ai puso frate
+
+ json c++: https://github.com/nlohmann/json/releases
+
+ also tot pt windows: dute si dute firewallul ca nu te lasa sa deschizi asa un port pe localhost cum vrei tu (fuck you microslop)
+
+ daca apar erori in vscode trateazale ca warninguri. numa cand compilezi o sa iti apara adevaratele erori (vscode e retardat)

@@ -158,7 +158,7 @@ signed main(){
         res.end();
     });
     
-    app.port(1337).multithreaded().run();
+    app.bindaddr("0.0.0.0").port(6969).multithreaded().run();
     
     END_PROCESSES:
     sqlite3_finalize(stmt);
