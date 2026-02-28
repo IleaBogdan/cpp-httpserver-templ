@@ -17,7 +17,5 @@ if [ "$1" == "update" ]; then
 fi
 
 echo "compiling cpp files..."
-g++ -std=c++23 -pthread *.cpp -o ./bin/server
+g++ -std=c++23 -pthread *.cpp -o ./bin/server -lsqlite3
 echo "compilation done!"
-# If using SQLite:
-# g++ -std=c++23 -pthread main.cpp -lsqlite3 -o myapp

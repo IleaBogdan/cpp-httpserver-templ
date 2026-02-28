@@ -1,7 +1,13 @@
 #include <crow.h>
 #include <random>
+#include <sqlite3.h>
+
 #include "json.hpp"
 using json=nlohmann::json;
+
+const std::string DATABASE_PATH="test.db";
+sqlite3* db;
+sqlite3_stmt* stmt;
 
 std::string get_random_number(void){
     std::random_device rd;
@@ -11,19 +17,43 @@ std::string get_random_number(void){
     return std::to_string(dis(gen));
 }
 json get_users_from_db(void){
-    return json({
-        {"Name","TEST_NAME"},
-        {"EMAIL","TEST_EMAIL"}
-    });
+    sqlite3_stmt* stmt;  // Local statement variable
+    std::string sql = "SELECT * FROM users WHERE ID = @Id;";
+    
+    sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
+    int index = sqlite3_bind_parameter_index(stmt, "@Id");
+    sqlite3_bind_int(stmt, index, 1);
+
+    json result;  // Create json object to return
+    
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        // Get the actual data from the query
+        int id = sqlite3_column_int(stmt, 0);  // First column (ID)
+        const char* name = (const char*)sqlite3_column_text(stmt, 1);  // Second column (Name)
+        const char* email = (const char*)sqlite3_column_text(stmt, 2);  // Third column (Email)
+        
+        // Put the actual data into the json
+        result = json({
+            {"ID", id},
+            {"Name", name},
+            {"EMAIL", email}
+        });
+    }
+    
+    sqlite3_finalize(stmt);  // Clean up
+    return result;
 }
-int main() {
+signed main(){
+    signed STATUS_CODE=0;
+
     crow::SimpleApp app;
     
-    // CROW_ROUTE(app, "/openapi.yaml").methods("GET"_method)([](crow::request& req, crow::response& res) {
-    //     res.set_static_file_info("static/openapi.yaml");
-    //     res.end();
-    // });
-    
+    int rc=sqlite3_open(DATABASE_PATH.c_str(),&db);
+    if(rc){
+        std::cerr<<"failed to open db";
+        goto RET;
+    }
+
     CROW_ROUTE(app, "/").methods("GET"_method)([](crow::request& req, crow::response& res) {
         res.redirect("/static/swagger/index.html");
         res.end();
@@ -40,6 +70,10 @@ int main() {
     
     app.port(1337).multithreaded().run();
     
-    RET_SUCCES:
-    return EXIT_SUCCESS;
+    END_PROCESSES:
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    
+    RET:
+    return STATUS_CODE;
 }
