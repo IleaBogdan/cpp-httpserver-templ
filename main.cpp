@@ -1,6 +1,9 @@
 #include <crow.h>
 #include <random>
 #include <sqlite3.h>
+#include <string>
+#include <vector>
+#include <algorithm>
 
 #include "json.hpp"
 using json=nlohmann::json;
@@ -47,6 +50,23 @@ signed main(){
     signed STATUS_CODE=0;
 
     crow::SimpleApp app;
+    // Add CORS to each route instead
+    auto add_cors = [](crow::response& res) {
+        res.add_header("Access-Control-Allow-Origin", "*");
+        res.add_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        res.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    };
+    
+    // Add OPTIONS handler for preflight requests
+    CROW_ROUTE(app, "/<path>").methods("OPTIONS"_method)([](std::string path){
+        crow::response res(200);
+        res.add_header("Access-Control-Allow-Origin", "*");
+        res.add_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        res.add_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+        res.add_header("Access-Control-Max-Age", "86400");
+        return res;
+    });
+
     
     int rc=sqlite3_open(DATABASE_PATH.c_str(),&db);
     if(rc){
@@ -62,11 +82,16 @@ signed main(){
     CROW_ROUTE(app,"/getUsers").methods("GET"_method)([](crow::request& req, crow::response& res){
         auto data=get_users_from_db();
         res.set_header("Content-Type", "application/json");
+        res.add_header("Access-Control-Allow-Origin", "*");
         res.body=data.dump(); 
         res.end();
     });
     
-    CROW_ROUTE(app, "/random").methods("GET"_method)(get_random_number);
+    CROW_ROUTE(app, "/random").methods("GET"_method)([](crow::request& req, crow::response& res){
+        res.add_header("Access-Control-Allow-Origin", "*");
+        res.body=get_random_number();
+        res.end();
+    });
     
     app.port(1337).multithreaded().run();
     

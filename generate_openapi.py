@@ -13,6 +13,7 @@ def should_exclude_route(route_path):
         r'^/static/swagger/',           # Swagger static files
         r'^/swagger/',                   # Swagger UI routes
         r'^/$',                           # Root route that redirects to Swagger
+        r'^/static/<string>'
     ]
     
     for pattern in exclude_patterns:
