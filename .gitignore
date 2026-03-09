@@ -3,3 +3,5 @@ Crow
 static/openapi.yaml
 node_modules
 json.hpp
+test
+bin
